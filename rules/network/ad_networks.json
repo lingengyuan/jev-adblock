@@ -1,0 +1,278 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "doubleclick.net",
+        "googlesyndication.com",
+        "googleadservices.com",
+        "googletagservices.com",
+        "2mdn.net",
+        "googlesyndicationgoogleads.g.doubleclick.net"
+      ],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "://adservice.google.",
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "sub_frame",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "amazon-adsystem.com",
+        "adnxs.com",
+        "criteo.com",
+        "criteo.net",
+        "pubmatic.com",
+        "rubiconproject.com",
+        "openx.net",
+        "openx.com",
+        "smartadserver.com",
+        "adform.net",
+        "casalemedia.com",
+        "indexww.com",
+        "sharethrough.com",
+        "yieldmo.com",
+        "zeotap.com",
+        "media.net",
+        "revcontent.com",
+        "mgid.com",
+        "adskeeper.com",
+        "adskeeper.co.uk",
+        "taboola.com",
+        "taboolasyndication.com",
+        "outbrain.com",
+        "outbrainimg.com",
+        "teads.tv",
+        "bidswitch.net",
+        "adsrvr.org",
+        "contextweb.com",
+        "zedo.com",
+        "adition.com",
+        "serving-sys.com",
+        "flashtalking.com",
+        "simpli.fi"
+      ],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "pos.baidu.com",
+        "cpro.baidustatic.com",
+        "cb.baidu.com",
+        "nsclick.baidu.com",
+        "mobads.baidu.com",
+        "tanx.com",
+        "mmstat.com",
+        "gdt.qq.com",
+        "mediav.com",
+        "admaster.com.cn",
+        "ipinyou.com",
+        "yads.youku.com",
+        "atm.youku.com",
+        "cupid.iqiyi.com",
+        "cm.bilibili.com",
+        "commercial.bilibili.com"
+      ],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "applovin.com",
+        "applovinedge.com",
+        "adcolony.com",
+        "unityads.unity3d.com",
+        "vungle.com",
+        "chartboost.com",
+        "inmobi.com",
+        "inmobicdn.com",
+        "ironsrc.com",
+        "supersonicads.com",
+        "startappservice.com",
+        "mopub.com",
+        "moatads.com",
+        "doubleverify.com",
+        "adsafeprotected.com",
+        "scorecardresearch.com"
+      ],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 11,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": ["hao123union.baidu.com"],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  },
+  {
+    "id": 12,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "/hao123_api/api/cpc",
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "media", "other"]
+    }
+  },
+  {
+    "id": 13,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "hao123.com/ifeed/cpc",
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "media", "other"]
+    }
+  },
+  {
+    "id": 14,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "hao123.com/erjiapi/adv",
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "media", "other"]
+    }
+  },
+  {
+    "id": 15,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "hao123img.com/res/ecom",
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "media", "other"]
+    }
+  },
+  {
+    "id": 16,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "adservice.facebook.com",
+        "ads.facebook.com",
+        "static.ads-twitter.com",
+        "ads.twitter.com",
+        "ads.linkedin.com",
+        "ads.pinterest.com",
+        "ads.instagram.com",
+        "pubnative.net",
+        "sonobi.com",
+        "districtm.io",
+        "emxdgt.com",
+        "bidr.io",
+        "ad.360.cn",
+        "g.360.cn",
+        "adman.360.cn",
+        "union.360.cn",
+        "miaozhen.com",
+        "adwo.com",
+        "alimama.com"
+      ],
+      "resourceTypes": [
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "sub_frame",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "media",
+        "websocket",
+        "other"
+      ]
+    }
+  }
+]

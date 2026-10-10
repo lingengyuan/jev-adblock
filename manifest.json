@@ -1,0 +1,88 @@
+{
+  "manifest_version": 3,
+  "name": "Jev Ad Block",
+  "version": "0.6.0",
+  "minimum_chrome_version": "114",
+  "description": "Jev 自动语义判断广告；全局与本页启用时进行网络拦截，无 key 或请求失败时本地规则兜底",
+  "permissions": ["storage", "scripting", "declarativeNetRequest"],
+  "host_permissions": ["<all_urls>", "https://api.typesafe.ai/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ad_networks",
+        "enabled": true,
+        "path": "rules/network/ad_networks.json"
+      },
+      {
+        "id": "community",
+        "enabled": true,
+        "path": "rules/network/community.json"
+      }
+    ]
+  },
+  "background": {
+    "service_worker": "src/background/sw.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "css": ["src/content/hide.css", "src/content/cosmetic.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": true,
+      "js": ["rules/dom/community.js", "src/content/early.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": true,
+      "js": [
+        "src/shared/constants.js",
+        "src/shared/text.js",
+        "src/shared/site-resolve.js",
+        "rules/dom/common.js",
+        "rules/dom/sites/zhihu.js",
+        "rules/dom/sites/weibo.js",
+        "rules/dom/sites/bilibili.js",
+        "rules/dom/sites/qqmail.js",
+        "rules/dom/sites/hao123.js",
+        "src/content/state.js",
+        "src/content/protect.js",
+        "src/content/hide.js",
+        "src/content/score.js",
+        "src/content/layers/rules.js",
+        "src/content/layers/labels.js",
+        "src/content/layers/overlays.js",
+        "src/content/layers/ambiguous.js",
+        "src/content/pipeline.js",
+        "src/content/main.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "Jev Ad Block",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "toggle-global": {
+      "suggested_key": { "default": "Ctrl+Shift+J", "mac": "Command+Shift+J" },
+      "description": "全局启用/暂停"
+    }
+  }
+}

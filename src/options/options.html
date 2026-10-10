@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jev Ad Block 设置</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      body {
+        max-width: 560px;
+        margin: 40px auto;
+        padding: 0 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        font-size: 22px;
+        margin-bottom: 4px;
+      }
+      .sub {
+        color: #777;
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      fieldset {
+        border: 1px solid #ccc4;
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+      }
+      legend {
+        font-weight: 600;
+        font-size: 14px;
+        padding: 0 6px;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        margin: 10px 0 4px;
+      }
+      .hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 2px;
+      }
+      input[type="password"],
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+        font-size: 14px;
+        background: transparent;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      button {
+        padding: 8px 16px;
+        border: 1px solid #888;
+        border-radius: 6px;
+        background: transparent;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #e551ba;
+        border-color: #e551ba;
+        color: #fff;
+      }
+      .status {
+        font-size: 13px;
+        margin-left: 4px;
+      }
+      .status.ok {
+        color: #1a7f37;
+      }
+      .status.err {
+        color: #c0392b;
+      }
+      .switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      a {
+        color: #e551ba;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Jev Ad Block</h1>
+    <p class="sub">配置 API key 后，Jev 会在任意 HTTP(S) 网页上把本地筛出的候选元素发给 TypeSafe 判断；网络拦截在全局与本页均启用时生效，本地规则在无 key 或请求失败时兜底。API key 仅保存在本机。</p>
+    <p class="hint">请求只包含本地筛出的候选：最多 240 字可见文字、元素标签/区域/尺寸、广告标记、外链域名，以及浮层几何与交互信号；不包含页面 URL、标题、完整页面或链接路径与查询参数。候选文字仍可能含个人信息。</p>
+
+    <fieldset>
+      <legend>TypeSafe API</legend>
+      <label for="apiKey">API key</label>
+      <input id="apiKey" type="password" placeholder="ts-..." autocomplete="off" />
+      <div class="hint">
+        在
+        <a href="https://console.typesafe.ai" target="_blank" rel="noreferrer">console.typesafe.ai</a>
+        获取
+      </div>
+      <div class="row">
+        <button id="testBtn" type="button">测试连接</button>
+        <span id="testStatus" class="status"></span>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>行为</legend>
+      <div class="switch">
+        <input id="globalEnabled" type="checkbox" />
+        <label for="globalEnabled" style="margin: 0">全局启用（关闭后所有页面暂停判断与网络拦截）</label>
+      </div>
+      <label for="adThreshold">广告判定阈值（noul ≥ 该值才隐藏，默认 0.75）</label>
+      <input id="adThreshold" type="number" min="0.5" max="0.99" step="0.05" />
+      <div class="hint">调高更保守（少误判），调低更激进（多隐藏）</div>
+      <label for="mainGuard">主内容保护上限（疑似主内容概率 ≤ 该值才隐藏，默认 0.55）</label>
+      <input id="mainGuard" type="number" min="0" max="0.9" step="0.05" />
+      <div class="hint">避免隐藏疑似正文的元素</div>
+      <label for="hourlyBudget">每小时 Jev 判断配额（默认 1500）</label>
+      <input id="hourlyBudget" type="number" min="0" max="100000" step="50" />
+      <div class="hint">超出后自动回退本地规则；0 表示不限制</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>自定义规则</legend>
+      <label for="customSelectors">额外隐藏选择器（每行一个 CSS 选择器，匹配的元素直接隐藏）</label>
+      <textarea id="customSelectors" rows="5" placeholder=".my-ad-slot&#10;[data-custom-ad]"></textarea>
+      <div class="hint">示例：<code>.feed-ad</code>、<code>[data-promo]</code>。此处填写的选择器按你的判断直接隐藏，不再交 Jev 确认；写错可能误伤正常内容，请先用开发者工具核对。留空使用内置规则。</div>
+      <label for="allowlist">白名单域名（每行一个，这些站点完全跳过隐藏）</label>
+      <textarea id="allowlist" rows="3" placeholder="example.com&#10;mail.example.com"></textarea>
+      <div class="hint">子域名自动匹配，如填写 <code>example.com</code> 也匹配 <code>www.example.com</code></div>
+    </fieldset>
+
+    <div class="row">
+      <button id="saveBtn" class="primary" type="button">保存</button>
+      <span id="saveStatus" class="status"></span>
+    </div>
+
+    <fieldset style="margin-top: 18px">
+      <legend>调试日志（全部标签页，最近 200 条）</legend>
+      <div class="row" style="margin-top: 0">
+        <button id="refreshLogBtn" type="button">刷新</button>
+        <button id="clearLogBtn" type="button">清空日志</button>
+      </div>
+      <pre
+        id="logView"
+        style="max-height: 320px; overflow: auto; font-size: 11px; line-height: 1.5; background: #8881; border-radius: 6px; padding: 10px; margin: 10px 0 0; white-space: pre-wrap; word-break: break-all"
+      >（暂无日志。打开任意网页后点击刷新）</pre>
+      <div class="hint" style="margin-top: 6px">
+        精简中文摘要：站点 / 标签 / 规则命中 / 入队 / Jev 判断与隐藏 / 恢复与开关。调试用原始事件见 storage。
+      </div>
+    </fieldset>
+
+    <script src="../shared/constants.js"></script>
+    <script src="../shared/log-format.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+*.log
+*.heapsnapshot
+.DS_Store
+_metadata/
+dist/
+.tmp-e2e-profile/
+# 内部开发笔记（竞品分析、决策记录、已知问题清单），不随仓库公开。
+# 与 scripts/build.js 的 EXCLUDE_DIRS 同理：这是开发过程的草稿，不是产品的一部分。
+.workbuddy/

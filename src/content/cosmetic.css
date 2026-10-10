@@ -1,0 +1,37 @@
+/* 最强广告标记：100% 广告槽位/广告网络 iframe，直接隐藏。
+   这些规则由浏览器原生匹配、零 JS 开销、在 document_start 即生效；
+   代价是不可通过「恢复本页」还原（刷新页面恢复），与 uBlock Origin 的
+   cosmetic 过滤行为一致。需 Jev 确认的槽位仍由 JS 层处理。 */
+ins.adsbygoogle,
+.adsbygoogle,
+[id^="google_ads"],
+[id^="div-gpt-ad"],
+[data-ad-slot],
+[data-ad-unit],
+[data-ad-client],
+[data-ad-placement],
+.ad-slot,
+.ad-unit,
+#taboola-below-article,
+#taboola-below-article-thumbnails,
+.trc_related_container,
+.OUTBRAIN,
+.outbrain-widget,
+iframe[src*="googlesyndication.com"],
+iframe[src*="doubleclick.net"],
+iframe[src*="adservice.google"],
+iframe[src*="googleadservices.com"],
+iframe[src*="amazon-adsystem.com"],
+iframe[src*="adnxs.com"],
+iframe[src*="criteo.com"],
+iframe[src*="smartadserver.com"],
+iframe[src*="adform.net"],
+iframe[src*="pubmatic.com"],
+iframe[src*="rubiconproject.com"],
+iframe[src*="openx.net"],
+iframe[src*="taboola.com"],
+iframe[src*="outbrain.com"],
+iframe[src*="zeotap.com"],
+iframe[src*="yieldmo.com"] {
+  display: none !important;
+}

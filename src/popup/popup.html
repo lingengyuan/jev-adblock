@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jev Ad Block</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      body {
+        width: 280px;
+        margin: 0;
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 15px;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 10px;
+        margin-bottom: 12px;
+      }
+      .stat {
+        background: #8888;
+        border-radius: 6px;
+        padding: 6px 8px;
+      }
+      .stat b {
+        display: block;
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat span {
+        font-size: 11px;
+        opacity: 0.75;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      button {
+        flex: 1;
+        padding: 7px 0;
+        border: 1px solid #888;
+        border-radius: 6px;
+        background: transparent;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .switch {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .warn {
+        background: #e551ba22;
+        border: 1px solid #e551ba66;
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      }
+      .warn a {
+        color: #e551ba;
+      }
+      #msg {
+        font-size: 12px;
+        color: #888;
+        margin-top: 8px;
+        min-height: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>
+      Jev Ad Block
+      <span class="switch">
+        <input id="enabled" type="checkbox" />
+        <label for="enabled" style="margin: 0; font-weight: 400; font-size: 12px">本页</label>
+      </span>
+    </h1>
+
+    <div id="keyWarn" class="warn" hidden>
+      尚未配置 API key，仅网络拦截与规则兜底生效。
+      <a href="#" id="openOptions">去设置</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="hiddenCount">–</b><span>已隐藏</span></div>
+      <div class="stat"><b id="detCount">–</b><span>规则兜底</span></div>
+      <div class="stat"><b id="semCount">–</b><span>Jev/浮层</span></div>
+      <div class="stat"><b id="uncertainCount">–</b><span>存疑保留</span></div>
+    </div>
+
+    <div class="row">
+      <button id="restoreBtn" type="button">恢复本页</button>
+      <button id="rescanBtn" type="button">重新扫描</button>
+    </div>
+    <div id="msg"></div>
+
+    <details style="margin-top: 10px">
+      <summary style="cursor: pointer; font-size: 12px; color: #888">
+        日志（本页，最近 100 条）
+        <span id="logCount" style="color: #e551ba"></span>
+      </summary>
+      <div class="row" style="margin-top: 6px">
+        <button id="refreshLogBtn" type="button" style="flex: 1">刷新日志</button>
+        <button id="clearLogBtn" type="button" style="flex: 1">清空</button>
+      </div>
+      <pre
+        id="logView"
+        style="max-height: 220px; overflow: auto; font-size: 11px; line-height: 1.5; background: #8881; border-radius: 6px; padding: 8px; margin: 6px 0 0; white-space: pre-wrap; word-break: break-all; font-family: inherit"
+      >（暂无日志）</pre>
+    </details>
+
+    <script src="../shared/log-format.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

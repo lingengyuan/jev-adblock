@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Jev Ad Block Fixture</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; }
+    .layout { display: flex; gap: 16px; max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .main { flex: 1; min-width: 0; }
+    .side { width: 300px; }
+    article, .post, .card, .ad-slot, .feedAd, .RecommendSection, .promo-card {
+      min-height: 80px; margin-bottom: 12px; padding: 12px;
+      border: 1px solid #ccc; border-radius: 6px; background: #fafafa;
+    }
+    .ad-slot, .feedAd { min-height: 140px; background: #fff3f7; }
+    .RecommendSection { min-height: 200px; background: #f3f8ff; }
+    .promo-card { min-height: 180px; background: #fff8e8; }
+    .sticky-promo {
+      position: fixed; left: 0; right: 0; bottom: 0; height: 72px;
+      background: #ff00aa; color: #fff; display: flex; align-items: center;
+      justify-content: center; z-index: 9999; font-size: 18px;
+    }
+    .qq-float-scroll {
+      min-height: 320px; border: 1px dashed #8af; background: #f5fbff; padding: 12px;
+    }
+    .qq-sidebar-menus {
+      width: 220px; min-height: 280px; border: 1px dashed #8fa; background: #f5fff8; padding: 12px;
+    }
+    .neutral-box {
+      min-height: 96px; margin-bottom: 12px; padding: 12px;
+      border: 1px solid #ccc; border-radius: 6px; background: #f0fff4;
+    }
+    .force-target {
+      min-height: 96px; margin-bottom: 12px; padding: 12px;
+      border: 1px solid #ccc; border-radius: 6px; background: #f5f5ff;
+    }
+    .sponsored-box {
+      min-height: 120px; margin-bottom: 12px; padding: 12px;
+      border: 1px solid #ccc; border-radius: 6px; background: #fff3f7;
+    }
+    h1 { font-size: 22px; }
+    p { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Jev Ad Block Fixture</h1>
+    <nav>导航 · 首页 · 问题 · 发现</nav>
+  </header>
+  <div class="layout">
+    <main class="main">
+      <article id="main-article">
+        <h2>正常文章标题</h2>
+        <p>这是页面主内容，用于测试 primary content 判定，不应被隐藏。</p>
+        <p>Additional body paragraphs so the article is clearly primary content for the Jev judge.</p>
+        <p>Enough text length to keep the article in the main content region of the page.</p>
+      </article>
+
+      <div class="ad-slot" id="common-ad-slot">
+        <span>广告</span>
+        <p>Common deterministic ad slot matched by .ad-slot detector.</p>
+        <a href="https://example.com/landing">了解详情</a>
+      </div>
+
+      <div class="post" id="labeled-post">
+        <span>广告</span>
+        <p>Labeled promotional post that should be hidden via the label container path.</p>
+        <img alt="" width="240" height="120" />
+      </div>
+
+      <div class="promo-card" id="ambiguous-promo">
+        <h3>限时优惠券</h3>
+        <p>打开 App 领取专属优惠，下载 App 立减 50 元。</p>
+        <a href="https://example.com/download">下载App</a>
+      </div>
+
+      <!-- 误报回归：class 命中 zhihu detector（[class*='advert' i]），但内容是正文。
+           乐观隐藏 → Jev 判非广告 → restoreEl。这条"乐观隐藏后再恢复"的路径
+           正是自触发闪烁循环的触发条件；fixture 其余候选全部被判 hide，
+           从不走恢复，因此缺了它闪烁检测就是空转的。
+           刻意不用自定义选择器驱动：自定义选择器是强制语义，命中即隐藏、
+           不经过"先隐藏再交 Jev 复核"这一步（见 src/content/layers/rules.js）。
+           对应单元测试 tests/unit/self-trigger.test.js。 -->
+      <div class="neutral-box advert-notice" id="neutral-announcement">
+        <h2>站内公告</h2>
+        <p>这是一段普通的正文内容，没有任何推广意图，也没有号召性用语。</p>
+        <p>用于验证误报场景：命中规则但并非广告的元素最终应恢复显示。</p>
+      </div>
+
+      <!-- 自定义选择器为强制语义：命中即隐藏，不交 Jev 复核。
+           内容刻意做成完全非广告（Jev 会判 keep），以此证明隐藏来自用户的
+           选择器本身，而不是碰巧判对了——旧实现下这个元素会被 Jev 恢复显示。 -->
+      <div class="force-target" id="force-hidden-slot">
+        <h3>普通区块</h3>
+        <p>用户自定义选择器命中的普通内容，没有任何广告特征，也应当被直接隐藏。</p>
+      </div>
+
+      <!-- sweep 覆盖测试：站点脚本周期性夺回显示（见页面底部 script）。
+           该元素刻意不被 cosmetic.css / 社区 cosmetic 命中，只能由 JS 层隐藏，
+           这样站点的"移除 class + 清内联"才能真正把它夺回可见。 -->
+      <div class="sponsored-box" id="stubborn-ad-slot">
+        <h3>限时优惠券</h3>
+        <p>打开 App 领取专属优惠，下载 App 立减 50 元。</p>
+        <a href="https://example.com/download">下载App</a>
+      </div>
+
+      <div class="RecommendSection" id="recommend-section">
+        <h3>推荐关注</h3>
+        <div class="post">用户甲 · 回答了问题</div>
+        <div class="post">用户乙 · 提出了问题</div>
+        <div class="post">用户丙 · 分享了想法</div>
+      </div>
+
+      <div class="feedAd" id="zhihu-feed-ad">
+        <p>feedAd 精确广告位，应被 Jev 判定为广告后隐藏。</p>
+        <a href="https://example.com/feed">去看看</a>
+      </div>
+    </main>
+    <aside class="side">
+      <div class="promo-card" id="sidebar-yanyan">
+        <h3>盐言作者平台</h3>
+        <p>加入盐言，赚高收益。付费咨询开通入口。</p>
+        <a href="https://example.com/yanyan">去投稿</a>
+      </div>
+      <div class="promo-card" id="sidebar-zsxuetang">
+        <h3>知乎知学堂</h3>
+        <p>去学习：开放平台课程，限时优惠。</p>
+        <a href="https://example.com/course">去学习</a>
+      </div>
+      <div class="RecommendSection" id="sidebar-recommend">
+        <h3>你可能感兴趣</h3>
+        <div class="post">话题 A</div>
+        <div class="post">话题 B</div>
+      </div>
+      <div class="qq-sidebar-menus ui-float-scroll-body sidebar-menus" id="qq-sidebar">
+        <h3>收件箱 1082</h3>
+        <a href="#important">重要联系人</a>
+        <a href="#starred">星标邮件</a>
+        <a href="#group">群邮件</a>
+        <a href="#sent">已发送</a>
+        <a href="#drafts">草稿箱</a>
+        <a href="#deleted">已删除</a>
+        <a href="#junk">垃圾箱</a>
+        <a href="#inbox">收件箱</a>
+        <p>正常邮箱侧栏导航，不应被当作浮层隐藏。</p>
+      </div>
+    </aside>
+  </div>
+  <div class="xmail-ui-float-scroll qq-float-scroll" id="qq-mail-list">
+    <h3>今天 (1 封)</h3>
+    <div class="post"><a href="#m1">工作安排确认</a><p>请查收附件并回复。</p></div>
+    <div class="post"><a href="#m2">会议纪要</a><p>昨天的评审结论如下。</p></div>
+    <div class="post"><a href="#m3">广告邮件示例</a><p>限时优惠 欢迎了解我们的活动。</p></div>
+    <div class="post"><a href="#m4">发票通知</a><p>电子发票已开具。</p></div>
+    <div class="post"><a href="#m5">账号安全提醒</a><p>检测到新设备登录。</p></div>
+    <div class="post"><a href="#m6">项目周报</a><p>本周进展与风险汇总。</p></div>
+    <p>邮箱主列表包含正常邮件与广告邮件文本，整体不应被隐藏。</p>
+  </div>
+  <div class="sticky-promo" id="sticky-download">
+    打开App · 下载App · 领取限时优惠
+  </div>
+  <script>
+    // 注意：#stubborn-ad-slot 的"夺回显示"由 e2e 测试按需驱动
+    //（tests/test_extension.py 的 strip 调用），不放常驻 setInterval——
+    // 常驻脚本会让页面永远不静默，从而无法把"页面引发的恢复"
+    // 与"插件自触发"区分开。
+  </script>
+</body>
+</html>
