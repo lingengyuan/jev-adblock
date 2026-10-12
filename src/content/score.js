@@ -6,10 +6,23 @@ JevAd.createScore = function createScore(ctx) {
   const protect = JevAd.protect;
   const { MAX_CARD_H, MAX_CARD_W, SCAN_SELECTOR } = JevAd.constants;
 
+  // 尺寸闸门要拦住的是"大到不该被当成广告卡片"的容器（整页包裹层、
+  // 主内容区外壳），而不是所有超宽元素。旧实现 `width > MAX_CARD_W` 一刀切，
+  // 连带拒掉了横幅广告——728×90、970×90、全宽 1200+ 正是最标准的广告形态，
+  // 它们在繁体漫画站、门户首页上全都进不了候选。
+  // 判据改为"宽 **且** 高"：宽而扁是横幅，宽而高才是容器。
+  const TALL_FOR_WIDTH = 320; // 超过 MAX_CARD_W 的元素，高度低于此值视为横幅
+
+  function oversizedForCard(rect) {
+    if (rect.height > MAX_CARD_H) return true;
+    if (rect.width > MAX_CARD_W && rect.height > TALL_FOR_WIDTH) return true;
+    return false;
+  }
+
   function scoreCandidate(el, opts) {
     const aggressive = Boolean(opts && opts.aggressive);
     const rect = el.getBoundingClientRect();
-    if (rect.height > MAX_CARD_H || rect.width > MAX_CARD_W) return 0;
+    if (oversizedForCard(rect)) return 0;
     if (rect.height < 40 || rect.width < 80) return 0;
     if (protect.hasProtectedContent(el, ctx.state.site)) return 0;
 

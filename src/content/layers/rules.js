@@ -1,7 +1,6 @@
 (globalThis.JevAd ??= {});
 
 JevAd.createRulesLayer = function createRulesLayer(ctx) {
-  const { describeEl } = JevAd.text;
   const protect = JevAd.protect;
   const { MAX_HIDE_H, MAX_HIDE_W, SCAN_SELECTOR } = JevAd.constants;
 
@@ -82,6 +81,17 @@ JevAd.createRulesLayer = function createRulesLayer(ctx) {
       if (el === document.body || el === document.documentElement) continue;
       const force = isForce(el, fsegs);
       if (useJev() && !force) {
+        // 强信号广告位（data-tu / data-adsite / unionad / float-ad 等站内
+        // 广告 slot 命名）曾经在这里直接隐藏、不问 Jev——那是为省配额的
+        // 优化。Jev 判断廉价后不再需要直隐：省下的是一次近免费的往返，
+        // 代价却是这类选择器可能命中"名字像广告位但实为站点功能"的元素
+        // （站内 union 导航、float 工具条），而它们只有 Jev 能分辨。
+        //
+        // 但强信号本身不能丢：data-tu/data-adsite 是属性，AD_CLASS 只看
+        // class/id，payload 里没有对应字段；float-ad/topbar-ad 等也大多不在
+        // AD_CLASS 内。若照普通 detector 原样入队，等于把这些证据降级成
+        // 弱候选。所以命中强信号时置 disclosesAd，由 Jev 的 ad 问题明确
+        // 采信该证据后再判——判断权交出去，证据不交出去。
         const cls = String(el.getAttribute("class") || "");
         const id = String(el.getAttribute("id") || "");
         const strongSlot =
@@ -90,22 +100,11 @@ JevAd.createRulesLayer = function createRulesLayer(ctx) {
           /float-ad|topbar-ad|unionad|fallback-ad|lefttip|topbe|bottom-banner|navrecommend|elevator-ad|rightTip|game-box|mingzhan|puzzle|siye|js-site-slot|coolsitead|ad-icon/i.test(
             `${id} ${cls}`
           );
-        if (strongSlot) {
-          ctx.state.judged.add(el);
-          if (ctx.hide.hideEl(el, "rule")) ctx.state.stats.deterministic += 1;
-          ctx.log("judge_result", {
-            el: describeEl(el),
-            source: "detector",
-            action: "hide",
-            mode: "strong-signal",
-          });
-          continue;
-        }
         ctx.pipeline.enqueue(el, {
-          score: 8,
+          score: strongSlot ? 9 : 8,
           kind: "inline",
           source: "detector",
-          disclosesAd: false,
+          disclosesAd: strongSlot,
           optimistic: true,
         });
         continue;
@@ -117,5 +116,5 @@ JevAd.createRulesLayer = function createRulesLayer(ctx) {
     }
   }
 
-  return { apply, collect, describeEl };
+  return { apply, collect };
 };

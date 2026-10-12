@@ -30,6 +30,9 @@ function createState() {
     site: null,
     customSelectors: [],
     allowlist: new Set(),
+    // 反拦截墙解锁过的内联滚动锁定（{el, prop, value, priority}），
+    // 供「恢复本页」还原——否则墙隐藏了但页面仍滚不动。
+    scrollUnlocks: [],
     judgeFailures: 0,
     judgeCooldownUntil: 0,
   };

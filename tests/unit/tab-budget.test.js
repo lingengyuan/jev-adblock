@@ -85,19 +85,31 @@ function cand(i) {
   };
 }
 
-const KEY = { apiKey: "ts-test", hourlyBudget: 100000 };
+const KEY = { apiKey: "ts-test", hourlyBudget: 100000000 };
+
+// 从实现源码读取标签页预算常量：测试与实现共用一个数字来源，
+// 避免"改了常量、测试还按旧值断言"的静默脱钩。
+function READ_BUDGET() {
+  const src = require("fs").readFileSync(JUDGE, "utf8");
+  const m = src.match(/TAB_CANDIDATE_BUDGET\s*=\s*(\d+)/);
+  if (!m) throw new Error("未能从 judge.js 解析 TAB_CANDIDATE_BUDGET");
+  return Number(m[1]);
+}
 
 test("超过标签页预算返回 TAB_BUDGET，且不影响其他标签页", async () => {
   const store = { ...KEY };
   installChrome(store);
   const { handleJudge, clearTabUsage } = freshJudge();
 
-  // 每批 40 条，预算 400 → 第 11 批应被拒
+  // 预算从常量读，避免测试与实现数字脱钩（此前硬编码 400，常量一改就废）。
+  // 单次批大小也取小于预算的值，保证"累积到超限"而非"单批即超限"。
+  const budget = READ_BUDGET();
+  const batchSize = Math.max(1, Math.floor(budget / 10));
   let blocked = null;
-  for (let batch = 0; batch < 12 && !blocked; batch++) {
-    nextResponse = apiResponse(40);
+  for (let batch = 0; batch < 14 && !blocked; batch++) {
+    nextResponse = apiResponse(batchSize);
     const res = await handleJudge(
-      Array.from({ length: 40 }, (_, i) => cand(batch * 40 + i)),
+      Array.from({ length: batchSize }, (_, i) => cand(batch * batchSize + i)),
       "example.com",
       7,
     );

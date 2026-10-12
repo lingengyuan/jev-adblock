@@ -25,9 +25,9 @@ JevAd.createAmbiguousLayer = function createAmbiguousLayer(ctx) {
     });
     const accepted = [];
     for (const item of items) {
-      // MAX_QUEUE(300) 只管 pending 队列，MAX_BATCH 只拆批，都不限制一次扫描
-      // 能塞进多少候选。没有上限时，广告重的页面一次加载就能推进数百条，
-      // 每条都是一次 API 计费，把全局小时配额吃光。
+      // 单次扫描的候选上限。Jev 判断廉价，这个数只需挡病态页面（一次
+      // 变动就能产出上千候选的无限滚动列表）；正常页面远达不到。
+      // MAX_QUEUE 管瞬时队列、MAX_BATCH 只拆批，都不限制"一次扫描能塞多少"。
       if (accepted.length >= JevAd.constants.MAX_AMBIGUOUS_CANDIDATES) break;
       const overlaps = accepted.some(
         (a) => a.el.contains(item.el) || item.el.contains(a.el)

@@ -174,6 +174,16 @@ def main():
             timeout=45.0,
         )
 
+        # 反拦截墙：确定性路径（antiadblock 层），先于 Jev 处理。
+        # 文案做成繁体（台/港站点主流写法），并覆盖两层判据：
+        #   ① 名词∧动词双条件命中；② 悬浮/大覆盖形态命中。
+        # attr='anti-adblock' 证明隐藏来自确定性路径而不是碰巧判对。
+        wall_ok = wait_for(
+            lambda: hidden("#anti-adblock-wall")
+            and jev_ad_attr("#anti-adblock-wall") == "anti-adblock",
+            timeout=45.0,
+        )
+
         # ---- 闪烁（自触发扫描循环）检测 ----
         # 症状：页面每 1-2s（循环）或每 4s（sweep 与站点抢写 display）闪一次。
         # 只比对最终状态是抓不到的——循环在两相之间交替，采样到哪一相就判哪个结果。
@@ -188,10 +198,10 @@ def main():
             "#common-ad-slot", "#labeled-post", "#zhihu-feed-ad",
             "#ambiguous-promo", "#sticky-download",
             "#sidebar-yanyan", "#sidebar-zsxuetang",
-            "#force-hidden-slot",
+            "#force-hidden-slot", "#anti-adblock-wall",
             # 应保持可见（受保护内容 / 判定为非广告 / 乐观隐藏后恢复）
             "#main-article", "#recommend-section", "#qq-mail-list", "#qq-sidebar",
-            "#neutral-announcement",
+            "#neutral-announcement", "#anti-adblock-article",
         ]
         FLASH_WINDOW_MS = 6000
 
@@ -377,6 +387,9 @@ def main():
             "zhihu sidebar promos": sidebar_ok,
             # 自定义选择器为强制语义：误判也不该被 Jev 恢复
             "custom selector force-hides": force_ok and hidden("#force-hidden-slot"),
+            # 反拦截墙：确定性路径隐藏且标记理由；讲拦截的正文不得误伤
+            "anti-adblock wall hidden": wall_ok,
+            "anti-adblock article visible": present_visible("#anti-adblock-article"),
             "site=zhihu": any(
                 e.get("event") == "site"
                 and (e.get("data") or {}).get("name") == "zhihu"

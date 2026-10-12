@@ -41,6 +41,9 @@ JevAd.createHide = function createHide(ctx) {
     }
     // 乐观隐藏：允许大尺寸浮层（sticky/modal 本就可能很大）。
     if (reason === "optimistic") return false;
+    // 反广告拦截墙天然是大尺寸浮层（"关闭拦截才能阅读"本就覆盖大片视口），
+    // 与 overlay 同理跳过尺寸闸门——但受保护内容检查仍然保留在上面。
+    if (reason === "anti-adblock") return false;
     if (protect.looksOversized(el) && reason !== "overlay") {
       log("hide_skip", { reason: "oversized", el: describeEl(el) });
       return true;
@@ -121,6 +124,8 @@ JevAd.createHide = function createHide(ctx) {
     ctx.state.pending.length = 0;
     ctx.state.queued.clear();
     ctx.state.addedRoots.clear();
+    // 反拦截墙解锁过的滚动一并还原，否则「恢复本页」后页面仍锁着滚动。
+    if (ctx.antiadblock && ctx.antiadblock.restoreScroll) ctx.antiadblock.restoreScroll();
     protect.invalidateBodyLen();
     log("restore", { count });
     notifyBadge();

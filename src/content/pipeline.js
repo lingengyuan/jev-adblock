@@ -38,9 +38,9 @@ JevAd.createPipeline = function createPipeline(ctx) {
     const s = ctx.state;
     if (s.disposed || s.pending.length >= JevAd.constants.MAX_QUEUE) return false;
     if (s.queued.has(el)) return false;
-    // 帧级总量闸门。小时配额是所有标签页共享的，单帧没有闸门就能把它吃光
-    // （广告重的页面、无限滚动站点一次访问即可）。内容脚本按帧独立运行，
-    // 所以这里是"每帧"而不是"每页"——跨帧的总账由 SW 的标签页预算兜底。
+    // 帧级总量闸门。Jev 判断廉价，这个上限只需挡病态页面（无限滚动 /
+    // 广告农场，一帧能产生上千候选）；正常页面远达不到。内容脚本按帧独立
+    // 运行，所以这里是"每帧"而不是"每页"——跨帧的总账由 SW 的标签页预算兜底。
     // 超出后不再新增 Jev 候选：确定性来源退回本地规则直隐，
     // 低置信候选直接放弃——它们本来就只有形状证据。
     if (s.candidatesSent >= JevAd.constants.MAX_CANDIDATES_PER_FRAME) {
@@ -108,6 +108,13 @@ JevAd.createPipeline = function createPipeline(ctx) {
   function processSubtree(root) {
     if (!isEnabled() || !root) return;
     JevAd.protect.beginScan();
+
+    // 反广告拦截墙最先处理，且不经 Jev：纯墙（无推广话术）Jev 判 keep——
+    // 实测 blocks 0.99 但 promo 仅 0.25，而三个隐藏分支都要求 promo ≥ 0.5
+    // （见 layers/antiadblock.js 顶部注释）。
+    // 放在最前还有一层原因：墙的文案会被后续层的乐观隐藏当成普通候选，
+    // 先由本层确定性标记后，后续层读到 judged 就不会再动它。
+    if (ctx.antiadblock) ctx.antiadblock.apply(root);
 
     const jev = useJev();
     if (jev) {

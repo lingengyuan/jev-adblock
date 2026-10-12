@@ -31,6 +31,7 @@
   ctx.labels = JevAd.createLabelsLayer(ctx);
   ctx.overlays = JevAd.createOverlaysLayer(ctx);
   ctx.ambiguous = JevAd.createAmbiguousLayer(ctx);
+  ctx.antiadblock = JevAd.createAntiAdblockLayer(ctx);
   ctx.pipeline = JevAd.createPipeline(ctx);
 
   function resolveSite() {

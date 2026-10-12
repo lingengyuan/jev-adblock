@@ -26,6 +26,7 @@ const FILES = [
   "src/content/layers/labels.js",
   "src/content/layers/overlays.js",
   "src/content/layers/ambiguous.js",
+  "src/content/layers/antiadblock.js",
   "src/content/pipeline.js",
   "src/content/main.js",
 ];

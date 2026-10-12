@@ -130,7 +130,7 @@
       <label for="mainGuard">主内容保护上限（疑似主内容概率 ≤ 该值才隐藏，默认 0.55）</label>
       <input id="mainGuard" type="number" min="0" max="0.9" step="0.05" />
       <div class="hint">避免隐藏疑似正文的元素</div>
-      <label for="hourlyBudget">每小时 Jev 判断配额（默认 1500）</label>
+      <label for="hourlyBudget">每小时 Jev 判断配额（默认 30000，仅病理页面会触及）</label>
       <input id="hourlyBudget" type="number" min="0" max="100000" step="50" />
       <div class="hint">超出后自动回退本地规则；0 表示不限制</div>
     </fieldset>

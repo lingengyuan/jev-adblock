@@ -159,6 +159,26 @@
   <div class="sticky-promo" id="sticky-download">
     打开App · 下载App · 领取限时优惠
   </div>
+
+  <!-- 反广告拦截墙（确定性路径，见 src/content/layers/antiadblock.js）。
+       class 命中 common overlaySelectors 的 [class*='popup' i]，所以旧管线里
+       它会先被乐观隐藏、再交 Jev 复核——这正是"墙被恢复出来"的现场。
+       新管线由 antiadblock 层在 Jev 之前确定性隐藏（reason=anti-adblock）。
+       文案刻意用繁体，同时覆盖繁体关键词表（台/港站点主流写法）。 -->
+  <div class="blocker-popup" id="anti-adblock-wall" style="position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,.82);color:#fff;display:flex;align-items:center;justify-content:center;">
+    <div>
+      <h3>偵測到您使用了廣告攔截外掛</h3>
+      <p>請關閉廣告攔截器後繼續瀏覽，或將本站加入白名單，感謝您的支持。</p>
+      <a href="#whitelist">查看如何關閉</a>
+    </div>
+  </div>
+
+  <!-- 反拦截误报回归：讲广告拦截的**正文**（流内、无悬浮形态），不应被隐藏。 -->
+  <div class="article-note" id="anti-adblock-article">
+    <h3>广告拦截技术简史</h3>
+    <p>广告拦截器的原理是通过规则列表匹配请求 URL，命中后阻止网络请求。
+       本文讨论广告拦截技术的发展，不涉及任何站点弹窗，请关闭浏览器后重新打开阅读。</p>
+  </div>
   <script>
     // 注意：#stubborn-ad-slot 的"夺回显示"由 e2e 测试按需驱动
     //（tests/test_extension.py 的 strip 调用），不放常驻 setInterval——

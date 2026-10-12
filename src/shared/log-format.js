@@ -23,6 +23,7 @@
       jev: "Jev",
       "jev-detector": "Jev·规则",
       "labeled+jev": "标签+Jev",
+      "anti-adblock": "反拦截墙",
       oversized: "超尺寸",
       protected: "受保护",
     };
@@ -75,6 +76,8 @@
         return `跳过 ${el} · ${REASON_ZH[d.reason] || d.reason || ""}`;
       case "overlay_skip":
         return `浮层跳过 ${el} · ${d.reason === "main_content" ? "主内容" : d.reason || ""}`;
+      case "anti_adblock_hit":
+        return `反拦截墙隐藏 ${el}`;
       case "judge_request":
         return `请求 Jev 判断 ${d.count || 0} 项`;
       case "judge_result": {

@@ -1,14 +1,13 @@
 // 帧级候选上限的回归。
 //
-// 背景：小时配额是所有标签页共享的。内容脚本按帧独立运行（manifest 的
-// all_frames），没有帧级闸门时，广告重的页面或无限滚动站点一次访问就能
-// 把整小时预算吃光，之后所有站点一起回退本地规则。MAX_BATCH 只是拆批、
-// MAX_QUEUE 只管瞬时队列，都不限制"一帧总共能问多少次"。
+// 背景：Jev 判断廉价（批量近免费），帧级上限只为挡病理页面——无限滚动
+// 或广告农场一帧能产生上千候选。内容脚本按帧独立运行（manifest 的
+// all_frames），跨帧的总账另由 SW 的标签页预算兜底。
 //
 // 上限的行为约定：
 //   · 达到上限后，确定性来源（detector/label）退回本地规则**直隐**——
 //     它们本来就不依赖 Jev 也能判定；
-//   · 低置信候选直接放弃（本来就只有形状证据，不值得花配额）。
+//   · 低置信候选直接放弃（本来就只有形状证据）。
 const { test } = require("node:test");
 const assert = require("node:assert");
 const path = require("path");
@@ -33,6 +32,7 @@ const FILES = [
   "src/content/layers/labels.js",
   "src/content/layers/overlays.js",
   "src/content/layers/ambiguous.js",
+  "src/content/layers/antiadblock.js",
   "src/content/pipeline.js",
 ];
 
