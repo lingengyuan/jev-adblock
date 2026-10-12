@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { lintRuleset } = require("./lint-dnr.js");
+const { lintRuleset, checkShrink } = require("./lint-dnr.js");
 
 const root = path.join(__dirname, "..");
 const dist = path.join(root, "dist");
@@ -121,6 +121,8 @@ if (!fs.existsSync(manifestPath)) {
 
   // DNR 静态规则集 lint：Chrome 加载静态 ruleset 是全有或全无的——只要有一条
   // 规则违反约束，整包被拒，表现为"拦截完全静默失效"。构建期拦住远比上线后排查便宜。
+  // 另外比对上次的规则条数：源站改版/镜像残缺会让规则集合法地变小，
+  // 逐条校验发现不了（详见 lint-dnr.js 的 checkShrink）。
   for (const res of dnrRules || []) {
     const p = path.join(dist, res.path);
     if (!fs.existsSync(p)) continue; // 缺失已由上面的 requirePath 报出
@@ -131,6 +133,7 @@ if (!fs.existsSync(manifestPath)) {
       continue; // JSON 语法错误已在上面的 json 检查中报出
     }
     const problems = lintRuleset(rules, res.id || res.path);
+    checkShrink(p, rules, res.id || res.path, problems);
     for (const problem of problems) {
       failed += 1;
       console.error(`FAIL dnr ${problem}`);

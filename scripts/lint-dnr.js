@@ -5,10 +5,11 @@
 // 里只要有一条规则违反约束，整个 ruleset 会被整体拒绝，表现为"广告拦截悄悄
 // 完全失效"，而控制台未必有明显报错。构建期把它拦下来，比上线后排查便宜得多。
 //
-// 覆盖两类问题：
+// 覆盖三类问题：
 //   ① 契约问题：Chrome 会直接拒绝整包（非法 urlFilter 字符、重复 id、
 //      静态规则里出现 session-only 的 tabIds 等）；
-//   ② 语义事故：语法合法但会放大影响面（allow + 空 condition 等于放行一切）。
+//   ② 语义事故：语法合法但会放大影响面（allow + 空 condition 等于放行一切）；
+//   ③ 静默缩水：逐条合法、Chrome 照常加载，但整包规则数暴跌。
 //
 // 校验在生成的 JSON 上做（而非转换器中间态），所以无论规则来自哪个转换路径
 // 都受同一道约束。
@@ -28,9 +29,19 @@ const DOMAIN_TYPE = new Set(["firstParty", "thirdParty"]);
 // urlFilter 字符集与域名形状直接复用转换器的定义——两边若各写一套，构建期
 // 校验会比运行期生成更宽松（或反之），这道 lint 就失去了意义。
 const { URL_FILTER_ALLOWED, DOMAIN_LABELED } = require("./convert-filters.js");
+const path = require("path");
+const fs = require("fs");
+const { execFileSync } = require("child_process");
 const MAX_URL_FILTER_LEN = 2000;
 const MAX_REGEX_LEN = 1000;
-const MAX_RULES = 30000;
+const MAX_RULES = 30000; // Chrome GUARANTEED_MINIMUM_STATIC_RULES
+
+// 规则数缩水的判定阈值（思路借自 esp32-c3-adblock 的 tools/build_blocklist.py：
+// 源列表读不到时它宁可报错退出，也不产出一个更小的 blocklist，理由是
+// "静默缩水没人会发现"）。我们的同类风险换了形态：源站改版、CDN 返回残缺内容、
+// 镜像回了错误页——规则条条合法，拦截面却悄悄缩小。逐条 lint 看不见，只能比总量。
+const SHRINK_MAX_DROP = 50; // 少于这么多条不值得报警：上游日常波动
+const SHRINK_MAX_RATIO = 0.02; // 掉幅同时要超过 2% 才判定为事故
 
 // requestDomains / initiatorDomains 只接受域名本身：不带 scheme、路径、端口、
 // 通配，且需为 punycode（非 ASCII 一律拒绝）。
@@ -185,14 +196,55 @@ function lintRuleset(rules, label = "ruleset") {
   if (rules.length > MAX_RULES) {
     problems.push(`${label}: 规则数 ${rules.length} 超过静态上限 ${MAX_RULES}`);
   }
+  if (rules.length === 0) {
+    // 空规则集能过所有逐条校验——没有规则可查——却让整个拦截静默失效。
+    problems.push(`${label}: 规则集为空`);
+  }
   const seenIds = new Set();
   rules.forEach((rule, i) => lintRule(rule, i, problems, seenIds));
   return problems.map((p) => `${label}: ${p}`);
 }
 
+// 基线存在 artifact 目录（与 Chrome 自己写生成物的地方同一处）：被 .gitignore
+// 排除、随生成物一起重建，不进版本库。两者对齐后每次转换都能回答"这次是不是
+// 少了一大截"。局限要说清：CI 全新克隆时首次运行只建立基线，不会报警——这是
+// 给"正在跑 npm run filters 的人"设的绊线，而那个人正是需要看见缩水的人。
+const BASELINE_DIR = path.join(__dirname, "..", "_metadata", "generated_indexed_rulesets");
+
+function artifactBaselinePath(basename, baselineDir) {
+  return path.join(baselineDir, `_${basename}.baseline`);
+}
+
+// ruleset 路径不存在（如单测里没有实体文件）时返回 null，调用方跳过该项。
+function checkShrink(abspath, ruleset, label, problems, baselineDir = BASELINE_DIR) {
+  if (!abspath || !fs.existsSync(abspath)) return;
+  const p = artifactBaselinePath(path.basename(abspath), baselineDir);
+  if (!fs.existsSync(p)) {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, `${ruleset.length}\n`);
+    return;
+  }
+  const prev = Number.parseInt(fs.readFileSync(p, "utf8").trim(), 10);
+  // 基线缺失或损坏时只报告、不判失败——数据坏了要修，不能静默当没有。
+  if (!Number.isInteger(prev) || prev < 0) {
+    problems.push(`${label}: 基线文件损坏，无法判断规则集是否缩水（${p}）`);
+    return;
+  }
+  if (prev === 0) {
+    fs.writeFileSync(p, `${ruleset.length}\n`);
+    return;
+  }
+  const ratio = (prev - ruleset.length) / prev;
+  if (ruleset.length < prev && prev - ruleset.length > SHRINK_MAX_DROP && ratio > SHRINK_MAX_RATIO) {
+    // 只报告、不自动改基线：少掉的规则要被看见，而不是被下次写入抹平。
+    problems.push(
+      `${label}: 规则数从 ${prev} 降到 ${ruleset.length}（-${(ratio * 100).toFixed(1)}%）` +
+        `，逐条合法但拦截面缩小——确认上游是否改版/镜像残缺，再删 ${p} 重建基线`,
+    );
+  }
+}
+
 function main() {
-  const fs = require("fs");
-  const path = require("path");
   const root = path.join(__dirname, "..");
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   const resources = (manifest.declarative_net_request || {}).rule_resources || [];
@@ -203,9 +255,9 @@ function main() {
       problems.push(`${res.path}: 文件不存在`);
       continue;
     }
-    problems = problems.concat(
-      lintRuleset(JSON.parse(fs.readFileSync(p, "utf8")), res.id || res.path),
-    );
+    const ruleset = JSON.parse(fs.readFileSync(p, "utf8"));
+    problems = problems.concat(lintRuleset(ruleset, res.id || res.path));
+    checkShrink(path.join(root, res.path), ruleset, res.id || res.path, problems);
   }
   if (problems.length) {
     for (const p of problems) console.error(`FAIL dnr ${p}`);
@@ -216,4 +268,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { lintRuleset, RESOURCE_TYPES, ACTION_TYPES };
+module.exports = { lintRuleset, checkShrink, RESOURCE_TYPES, ACTION_TYPES };

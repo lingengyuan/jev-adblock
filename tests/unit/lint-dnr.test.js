@@ -95,3 +95,44 @@ test("urlFilter 与 regexFilter 不能共存", () => {
 test("顶层不是数组时直接报错", () => {
   assert.deepStrictEqual(lintRuleset({}, "t"), ["t: 顶层必须是数组"]);
 });
+
+test("空规则集被拦下（逐条校验看不见，拦截会静默失效）", () => {
+  assert.match(lintRuleset([], "t")[0], /为空/);
+});
+
+test("缩水的规则集被拦下并要求确认基线", () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const { checkShrink } = require("../../scripts/lint-dnr.js");
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "shrink-"));
+  const rulesetPath = path.join(dir, "community.json");
+  const baselineDir = path.join(dir, "baseline");
+  const baselinePath = path.join(baselineDir, "_community.json.baseline");
+  fs.writeFileSync(rulesetPath, "[]");
+
+  // 首次运行：建立基线，不报警
+  let problems = [];
+  checkShrink(rulesetPath, new Array(6000).fill({}), "c", problems, baselineDir);
+  assert.deepStrictEqual(problems, []);
+
+  // 上游缩水 10%：逐条合法，但必须被拦下
+  problems = [];
+  checkShrink(rulesetPath, new Array(5400).fill({}), "c", problems, baselineDir);
+  assert.strictEqual(problems.length, 1);
+  assert.match(problems[0], /6000 降到 5400/);
+
+  // 上游日常波动：只掉 10 条，不该报警
+  problems = [];
+  checkShrink(rulesetPath, new Array(5990).fill({}), "c", problems, baselineDir);
+  assert.deepStrictEqual(problems, []);
+
+  // 确认后删除基线即可重建，恢复通行
+  fs.rmSync(baselinePath);
+  problems = [];
+  checkShrink(rulesetPath, new Array(5400).fill({}), "c", problems, baselineDir);
+  assert.deepStrictEqual(problems, []);
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});
